@@ -5,7 +5,8 @@ import unittest
 
 from bears.general.LineCountBear import LineCountBear
 from coalib.tests.TestUtilities import execute_coala
-from coalib.misc.ContextManagers import prepare_file
+from coalib.misc.ContextManagers import make_temp, prepare_file
+from coalib.parsing.StringProcessing import escape
 from coalib import coala
 
 
@@ -46,3 +47,25 @@ class coalaTest(unittest.TestCase):
                                        "-c", os.devnull)
         self.assertEqual(retval, 0)
         self.assertIn(LineCountBear.run.__doc__.strip(), output)
+
+    def test_patch_encoding(self):
+        # TODO Use PEP8Bear for checking trailing whitespaces since the
+        #      patch reading of stdout is responsible for bad replacing!!!
+        with make_temp() as content_file:
+            with open(content_file, "w", encoding="utf-8") as f:
+                # This string contains non-ascii characters and trailing
+                # whitespaces coala shall fix.
+                print(": @#°!\"§$,.-;:_%&/()=\?    ", file=f)
+
+            args = ["coala",
+                    "--files=" + escape(content_file, "\\"),
+                    "--bears=SpaceConsistencyBear",
+                    "-S default_actions=SpaceConsistencyBear:ApplyPatchAction",
+                    "-S use_spaces=True",
+                    "-S allow_trailing_whitespace=False"]
+            execute_coala(coala.main, *args)
+
+            with open(content_file, "r", encoding="utf-8") as f:
+                content = f.read()
+
+        self.assertEqual(content, ": @#°!\"§$,.-;:_%&/()=\?")

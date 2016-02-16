@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import tempfile
@@ -94,15 +95,22 @@ class Lint(Bear):
 
         if self.use_stdin:
             self._write(file, stdin_file, sys.stdin.encoding)
+
+        # Set the python io encoding so pipes are created using utf-8.
+        # See https://bugs.python.org/issue6135#msg180157
+        process_env = dict(os.environ)
+        process_env['PYTHONIOENCODING'] = 'utf-8'
+
         process = subprocess.Popen(command,
                                    shell=True,
                                    stdin=stdin_file,
                                    stdout=stdout_file,
                                    stderr=stderr_file,
-                                   universal_newlines=True)
+                                   universal_newlines=True,
+                                   env=process_env)
         process.wait()
-        stdout_output = self._read(stdout_file, sys.stdout.encoding)
-        stderr_output = self._read(stderr_file, sys.stderr.encoding)
+        stdout_output = self._read(stdout_file)
+        stderr_output = self._read(stderr_file)
         results_output = stderr_output if self.use_stderr else stdout_output
         results = self.process_output(results_output, filename, file)
         for file in (stdin_file, stdout_file, stderr_file):
