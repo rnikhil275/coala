@@ -144,9 +144,9 @@ class Lint(Bear):
         return groups
 
     def _create_command(self, **kwargs):
-        command = self.executable + ' ' + self.arguments
         for key in ("filename", "config_file"):
             kwargs[key] = escape_path_argument(kwargs.get(key, "") or "")
+        command = self.executable + ' ' + self.arguments
         return command.format(**kwargs)
 
     def __print_errors(self, errors):

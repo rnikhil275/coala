@@ -105,7 +105,7 @@ class RunShellCommandTest(unittest.TestCase):
 
         # Test one of the forbidden parameters.
         with self.assertRaises(TypeError):
-            with run_interactive_shell_command("some_command", shell=False):
+            with run_interactive_shell_command("some_command", stdout=None):
                 pass
 
     def test_run_shell_command_without_stdin(self):
